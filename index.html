@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoadWatch WebGIS</title>
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">RW</div>
+      <div>
+        <h1>RoadWatch</h1>
+        <p>Road Issue Reporting System</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="clock">
+        <span>Pakistan Standard Time</span>
+        <strong id="currentDateTime">Loading...</strong>
+      </div>
+
+      <span id="accountText">Not logged in</span>
+      <button id="loginOpenBtn" class="btn btn-light">Admin Login</button>
+      <button id="logoutBtn" class="btn btn-danger hidden">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="welcome">
+      <div>
+        <p class="eyebrow">WEB GIS APPLICATION</p>
+        <h2>Report and monitor road issues</h2>
+        <p>View road problems on the map and manage their progress.</p>
+      </div>
+      <div id="loginNote" class="notice">
+        Log in as an administrator to add or update reports.
+      </div>
+    </section>
+
+    <section class="stats">
+      <article class="stat-card">
+        <span>Total Reports</span>
+        <strong id="totalCount">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Pending</span>
+        <strong id="pendingCount">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>In Progress</span>
+        <strong id="progressCount">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Resolved</span>
+        <strong id="resolvedCount">0</strong>
+      </article>
+    </section>
+
+    <section class="main-grid">
+      <div class="panel">
+        <div class="panel-heading">
+          <div>
+            <h3>Road Issues Map</h3>
+            <p>Click a marker to view a report.</p>
+          </div>
+          <button id="refreshBtn" class="btn btn-light">Refresh</button>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="legend">
+          <span><i class="dot pending-dot"></i> Pending</span>
+          <span><i class="dot progress-dot"></i> In Progress</span>
+          <span><i class="dot resolved-dot"></i> Resolved</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-heading">
+          <div>
+            <h3>Add a Road Report</h3>
+            <p>Administrator access is required.</p>
+          </div>
+        </div>
+
+        <div id="reportLoginMessage" class="notice">
+          Please log in to add a road report.
+        </div>
+
+        <form id="reportForm">
+          <label for="issueType">Issue Type</label>
+          <select id="issueType" required>
+            <option value="">Select issue type</option>
+            <option>Pothole</option>
+            <option>Damaged Streetlight</option>
+            <option>Traffic Congestion</option>
+            <option>Road Damage</option>
+            <option>Waterlogging</option>
+            <option>Road Hazard</option>
+          </select>
+
+          <label for="description">Description</label>
+          <textarea id="description" maxlength="500"
+                    placeholder="Describe the road issue..."
+                    required></textarea>
+
+          <div class="coordinate-grid">
+            <div>
+              <label for="latitude">Latitude</label>
+              <input id="latitude" type="number" step="any"
+                     placeholder="Select on map" required>
+            </div>
+            <div>
+              <label for="longitude">Longitude</label>
+              <input id="longitude" type="number" step="any"
+                     placeholder="Select on map" required>
+            </div>
+          </div>
+
+          <p class="help">Click the map to choose a location.</p>
+
+          <button id="submitReportBtn" type="submit"
+                  class="btn btn-primary full-width" disabled>
+            Log in to Add Report
+          </button>
+          <p id="formMessage" class="message" role="status"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel reports-panel">
+      <div class="panel-heading reports-heading">
+        <div>
+          <h3>Road Reports</h3>
+          <p>Report details, creation time, and last update.</p>
+        </div>
+
+        <div class="filters">
+          <select id="typeFilter" aria-label="Filter by issue type">
+            <option value="">All Issue Types</option>
+            <option>Pothole</option>
+            <option>Damaged Streetlight</option>
+            <option>Traffic Congestion</option>
+            <option>Road Damage</option>
+            <option>Waterlogging</option>
+            <option>Road Hazard</option>
+          </select>
+
+          <select id="statusFilter" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Resolved</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="reportsContainer">
+        <p class="empty-state">Loading reports...</p>
+      </div>
+    </section>
+
+    <footer>
+      RoadWatch WebGIS | Leaflet | PostgreSQL/PostGIS
+    </footer>
+  </main>
+
+  <div id="loginModal" class="modal hidden"
+       role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="modal-card">
+      <button id="closeLoginBtn" class="close-btn"
+              aria-label="Close login">&times;</button>
+
+      <div class="logo login-logo">RW</div>
+      <p class="eyebrow">ADMINISTRATOR ACCESS</p>
+      <h2 id="loginTitle">Admin Login</h2>
+      <p class="muted">Enter your administrator credentials.</p>
+
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input id="username" autocomplete="username"
+               placeholder="Enter username" required>
+
+        <label for="password">Password</label>
+        <input id="password" type="password"
+               autocomplete="current-password"
+               placeholder="Enter password" required>
+
+        <button id="loginBtn" type="submit"
+                class="btn btn-primary full-width">Log In</button>
+        <p id="loginMessage" class="message" role="status"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
